@@ -1,8 +1,4 @@
-import { registerRootComponent } from 'expo';
-
-import App from './App';
-
-// registerRootComponent calls AppRegistry.registerComponent('main', () => App);
-// It also ensures that whether you load the app in Expo Go or in a native build,
-// the environment is set up appropriately
-registerRootComponent(App);
+// Defines the background wishlist task before anything renders: Android may
+// start the JS bundle only to run it.
+import './src/lib/alerts';
+import 'expo-router/entry';

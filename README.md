@@ -1,6 +1,11 @@
 # valorant-store
 
-Android app (Expo) that shows your own Valorant daily store, night market and bundles.
+Android app (Expo) for checking your Valorant store from your phone.
+
+- Daily offers, night market, featured bundle and the Kingdom Credits accessory store
+- Wallet balances (VP, Kingdom Credits, Radianite)
+- Tap a skin to see its variants and play the in-game preview video for each upgrade level
+- Wishlist: search any skin, and get a notification when one appears in your store
 
 ## Run on your phone
 
@@ -17,8 +22,14 @@ Android app (Expo) that shows your own Valorant daily store, night market and bu
 ## How login works
 
 - The app loads Riot's login page in a WebView. Log in once with your Riot ID; Google/Apple sign-in usually doesn't work inside WebViews.
-- The WebView keeps Riot's session cookie. On every launch or pull-to-refresh, the app loads the login URL in a hidden WebView, Riot redirects straight back with a fresh token, and you never see the login screen.
+- The WebView keeps Riot's session cookie. After that, every launch, pull-to-refresh and background check signs in silently: `expo/fetch` with `credentials: 'include'` shares the WebView's cookie store on Android, and `redirect: 'manual'` lets the app read the fresh token from Riot's redirect (`silentAuth()` in `src/lib/riot.ts`).
 - When Riot's session expires (roughly 1 to 3 weeks), the login page appears again.
+
+## Wishlist alerts
+
+Turn on **Store alerts** in the Wishlist tab. A background task (`src/lib/alerts.ts`, defined in `index.ts` so it exists before anything renders) contacts Riot once per store rotation. Android can't run code at an exact time, so the task wakes about every 30 minutes and returns immediately until the store has reset; the alert lands within roughly 30 minutes of the reset, or later if Android defers it (battery saver). A night market that opens mid-rotation is picked up at the next daily reset. Each find is notified once per store rotation, and nothing is sent for skins you've already seen in the app. **Check now** runs the same check immediately, which is also the quickest way to confirm silent sign-in works on your phone.
+
+## Data
 
 The app then calls Riot's entitlements, userinfo, region and storefront endpoints directly. Skin names, images and rarity come from [valorant-api.com](https://valorant-api.com). Endpoint reference: [valapidocs](https://valapidocs.techchrism.me/).
 

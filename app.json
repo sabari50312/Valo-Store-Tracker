@@ -18,9 +18,6 @@
       "predictiveBackGestureEnabled": false,
       "package": "com.sabari.valorantstore"
     },
-    "web": {
-      "favicon": "./assets/favicon.png"
-    },
     "plugins": [
       "expo-image",
       "expo-font",
@@ -31,7 +28,23 @@
           "image": "./assets/splash-icon.png",
           "imageWidth": 160
         }
+      ],
+      "expo-router",
+      "expo-video",
+      "expo-sqlite",
+      "expo-background-task",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/android-icon-monochrome.png",
+          "color": "#FF4655"
+        }
       ]
+    ],
+    "scheme": "valorantstore",
+    "platforms": [
+      "android",
+      "ios"
     ]
   }
 }
