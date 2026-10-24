@@ -20,7 +20,8 @@ export type Bundle = { name: string; image: string | null; price: number; remain
 
 export type Store = {
   fetchedAt: number;
-  wallet: { vp: number; kc: number; rad: number };
+  wallet: { vp: number; kc: number; rad: number } | null; // null if the wallet call failed
+  catalogMissing: boolean; // skin names/images unavailable (valorant-api.com down)
   daily: { remaining: number; items: Item[] };
   nightMarket: { remaining: number; items: Item[] } | null;
   accessories: { remaining: number; items: AccessoryOffer[] } | null;
@@ -34,11 +35,12 @@ export function offeredLevelIds(raw: any): string[] {
   return [...daily, ...night];
 }
 
-export async function loadStore(session: Session, catalog: Catalog): Promise<{ store: Store; raw: any }> {
-  const [raw, balances] = await Promise.all([fetchStorefront(session), fetchWallet(session)]);
+/** The storefront is required; the wallet and skin catalog are optional extras. */
+export async function loadStore(session: Session, catalog: Catalog | null): Promise<{ store: Store; raw: any }> {
+  const [raw, balances] = await Promise.all([fetchStorefront(session), fetchWallet(session).catch(() => null)]);
 
   const item = (levelId: string, price: number): Item => {
-    const skin = catalog.byLevel.get(levelId);
+    const skin = catalog?.byLevel.get(levelId);
     return {
       skinId: skin?.id ?? null,
       levelId,
@@ -87,7 +89,7 @@ export async function loadStore(session: Session, catalog: Catalog): Promise<{ s
         image: info?.data.displayIcon ?? null,
         price: b.TotalDiscountedCost?.[CURRENCY.VP] ?? 0,
         remaining: b.DurationRemainingInSeconds,
-        items: b.Items.map((i: any) => catalog.byLevel.get(i.Item.ItemID)?.name).filter(Boolean),
+        items: b.Items.map((i: any) => catalog?.byLevel.get(i.Item.ItemID)?.name).filter(Boolean),
       };
     }),
   );
@@ -96,11 +98,12 @@ export async function loadStore(session: Session, catalog: Catalog): Promise<{ s
     raw,
     store: {
       fetchedAt: Date.now(),
-      wallet: {
+      wallet: balances && {
         vp: balances[CURRENCY.VP] ?? 0,
         kc: balances[CURRENCY.KC] ?? 0,
         rad: balances[CURRENCY.RAD] ?? 0,
       },
+      catalogMissing: !catalog,
       daily: { remaining: panel.SingleItemOffersRemainingDurationInSeconds, items: daily },
       nightMarket,
       accessories,

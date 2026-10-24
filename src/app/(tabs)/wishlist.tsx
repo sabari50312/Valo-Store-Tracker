@@ -129,7 +129,8 @@ function AlertsCard() {
     setStatus('Checking…');
     try {
       const r = await checkWishlist({ force: true });
-      if (r.status === 'expired') setStatus('Silent sign-in failed: your Riot session expired. Pull to refresh on the Store tab to sign in.');
+      if (r.status === 'signedOut') setStatus('You are signed out. Sign in on the Store tab first.');
+      else if (r.status === 'expired') setStatus('Silent sign-in failed: your Riot session expired. Pull to refresh on the Store tab to sign in.');
       else if (r.status === 'checked' && !r.matches.length) setStatus("Silent sign-in works. None of your wishlist is in today's store.");
       else if (r.status === 'checked') setStatus(`Found ${r.matches.map(m => m.name).join(', ')}. Notification sent.`);
     } catch (e) {

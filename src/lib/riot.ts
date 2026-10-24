@@ -1,5 +1,8 @@
 // Riot client API calls. Endpoint reference: https://valapidocs.techchrism.me/
 import { fetch as expoFetch } from 'expo/fetch';
+import { TurboModule, TurboModuleRegistry } from 'react-native';
+
+import { AppError, httpError, toAppError } from './errors';
 
 export const AUTH_URL =
   'https://auth.riotgames.com/authorize' +
@@ -44,18 +47,52 @@ export function parseTokens(url: string): Tokens | null {
  * Works in background tasks too.
  */
 export async function silentAuth(): Promise<Tokens | null> {
-  const r = await expoFetch(AUTH_URL, { credentials: 'include', redirect: 'manual' });
+  const r = await request(AUTH_URL, { credentials: 'include', redirect: 'manual' });
+  if (r.status >= 500) throw httpError(r.status, 'auth.riotgames.com');
   return parseTokens(r.headers.get('location') ?? '');
 }
 
-export async function json<T = any>(url: string, init?: RequestInit): Promise<T> {
-  const r = await fetch(url, init);
-  if (!r.ok) throw new Error(`${r.status} from ${url.split('/')[2]}`);
-  return r.json();
+/** Signs out: clears Riot's cookies, which the login WebView shares. */
+export function clearRiotSession(): Promise<void> {
+  type Networking = TurboModule & { clearCookies(cb: (cleared: boolean) => void): void };
+  const net = TurboModuleRegistry.get<Networking>('Networking');
+  return new Promise(resolve => (net ? net.clearCookies(() => resolve()) : resolve()));
+}
+
+type Init = Parameters<typeof expoFetch>[1];
+const TIMEOUT_MS = 20_000;
+
+/** fetch with a timeout, and transport failures mapped to AppError. */
+async function request(url: string, init?: Init) {
+  const controller = new AbortController();
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, TIMEOUT_MS);
+  try {
+    return await expoFetch(url, { ...init, signal: controller.signal });
+  } catch (e) {
+    throw timedOut ? new AppError('timeout', url.split('/')[2]) : toAppError(e);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+export async function json<T = any>(url: string, init?: Init): Promise<T> {
+  const r = await request(url, init);
+  if (!r.ok) throw httpError(r.status, url.split('/')[2]);
+  try {
+    return (await r.json()) as T;
+  } catch {
+    throw new AppError('changed', `invalid JSON from ${url.split('/')[2]}`);
+  }
 }
 
 export type Session = {
   puuid: string;
+  riotId: string | null; // "Name#TAG"
+
   pd: string; // https://pd.{shard}.a.pvp.net
   headers: Record<string, string>;
 };
@@ -79,6 +116,7 @@ export async function openSession(t: Tokens): Promise<Session> {
   const region: string = geo.affinities.live;
   return {
     puuid: user.sub,
+    riotId: user.acct?.game_name ? `${user.acct.game_name}#${user.acct.tag_line}` : null,
     pd: `https://pd.${SHARDS[region] ?? region}.a.pvp.net`,
     headers: {
       ...bearer,

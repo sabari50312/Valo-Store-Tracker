@@ -1,13 +1,14 @@
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { AccessoryOffer, Bundle, Item, Store } from '@/lib/store';
 import { colors, fonts, KC_ICON, RAD_ICON, VP_ICON } from '@/lib/theme';
 import { useWishlist } from '@/lib/wishlist';
 
-import { clock, Hero, Price, SectionHeader, short, Skeleton, useNow } from './ui';
+import { Button, clock, Hero, Notice, Price, SectionHeader, short, Skeleton, useNow } from './ui';
 
 export function StoreView({ store, onRefresh }: { store: Store; onRefresh: () => void }) {
   const now = useNow();
@@ -23,14 +24,17 @@ export function StoreView({ store, onRefresh }: { store: Store; onRefresh: () =>
       }
     >
       <Hero label="Daily store" title={clock(left(store.daily.remaining))} caption="until your offers reset">
-        <View style={styles.wallet}>
-          <WalletPill icon={VP_ICON} value={store.wallet.vp} />
-          <WalletPill icon={KC_ICON} value={store.wallet.kc} />
-          <WalletPill icon={RAD_ICON} value={store.wallet.rad} />
-        </View>
+        {store.wallet && (
+          <View style={styles.wallet}>
+            <WalletPill icon={VP_ICON} value={store.wallet.vp} />
+            <WalletPill icon={KC_ICON} value={store.wallet.kc} />
+            <WalletPill icon={RAD_ICON} value={store.wallet.rad} />
+          </View>
+        )}
       </Hero>
 
       <View style={styles.body}>
+        {store.catalogMissing && <Notice text="Skin names and images couldn't load. Pull down to try again." />}
         {store.daily.items.map((it, i) => (
           <SkinCard key={i} item={it} wished={wished.has(it.levelId)} />
         ))}
@@ -75,6 +79,32 @@ export function StoreSkeleton({ label }: { label: string }) {
           <Skeleton key={i} />
         ))}
       </View>
+    </View>
+  );
+}
+
+export function SignedOutView({ onSignIn }: { onSignIn: () => void }) {
+  return (
+    <View style={styles.flex}>
+      <Hero label="Val Store" title="SIGN IN" caption="to see your daily store, night market and wallet" />
+      <View style={[styles.body, styles.signedOut]}>
+        <View style={styles.trust}>
+          <TrustLine icon="lock-closed-outline" text="You sign in on Riot's own login page. Val Store never sees or stores your password." />
+          <TrustLine icon="phone-portrait-outline" text="Everything stays on your phone. There are no Val Store servers." />
+          <TrustLine icon="eye-off-outline" text="Val Store only reads your store. It never buys, spends or changes anything on your account." />
+        </View>
+        <Button label="Sign in with Riot" onPress={onSignIn} />
+        <Text style={styles.disclaimer}>{"Val Store isn't affiliated with or endorsed by Riot Games."}</Text>
+      </View>
+    </View>
+  );
+}
+
+function TrustLine({ icon, text }: { icon: keyof typeof Ionicons.glyphMap; text: string }) {
+  return (
+    <View style={styles.trustLine}>
+      <Ionicons name={icon} size={18} color={colors.red} />
+      <Text style={styles.trustText}>{text}</Text>
     </View>
   );
 }
@@ -194,6 +224,11 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.85, transform: [{ scale: 0.99 }] },
 
   wallet: { flexDirection: 'row', gap: 8, marginTop: 14 },
+  signedOut: { gap: 16 },
+  trust: { backgroundColor: colors.surface, borderRadius: 8, borderWidth: 1, borderColor: colors.line, padding: 14, gap: 14 },
+  trustLine: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
+  trustText: { flex: 1, fontFamily: fonts.body, color: colors.text, fontSize: 13, lineHeight: 19 },
+  disclaimer: { fontFamily: fonts.body, color: colors.muted, fontSize: 11, textAlign: 'center' },
   walletPill: { backgroundColor: 'rgba(15,25,35,0.28)', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 5 },
 
   card: {

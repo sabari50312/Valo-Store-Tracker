@@ -40,6 +40,7 @@ TaskManager.defineTask(TASK, async () => {
 });
 
 export type CheckResult =
+  | { status: 'signedOut' }
   | { status: 'waiting'; resetsAt: number }
   | { status: 'expired' }
   | { status: 'checked'; matches: WishItem[]; notified: boolean };
@@ -75,6 +76,7 @@ async function notify(title: string, body: string) {
 
 /** force: skip the "store hasn't reset yet" wait and re-announce matches (Check now button). */
 export async function checkWishlist({ force = false } = {}): Promise<CheckResult> {
+  if (Storage.getItemSync('signedOut') === '1') return { status: 'signedOut' };
   const nextReset = Number(Storage.getItemSync('nextReset') ?? 0);
   if (!force && Date.now() < nextReset) return { status: 'waiting', resetsAt: nextReset };
 
@@ -102,6 +104,16 @@ export async function checkWishlist({ force = false } = {}): Promise<CheckResult
   );
   Storage.setItemSync('lastAlert', key);
   return { status: 'checked', matches, notified: true };
+}
+
+/** Signed out on purpose: stay quiet in the background and forget this account's alert state. */
+export function onSignedOut() {
+  Storage.setItemSync('signedOut', '1');
+  for (const key of ['nextReset', 'lastAlert', 'expiredAlert']) Storage.removeItemSync(key);
+}
+
+export function onSignedIn() {
+  Storage.removeItemSync('signedOut');
 }
 
 // --- enabling ---------------------------------------------------------------

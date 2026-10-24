@@ -5,6 +5,7 @@ import { ReactNode, useEffect, useState } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AppError, describe } from '@/lib/errors';
 import { colors, fonts } from '@/lib/theme';
 
 // --- time -------------------------------------------------------------------
@@ -108,13 +109,40 @@ export function Skeleton({ height = 150 }: { height?: number }) {
   return <Animated.View style={[styles.skeleton, { height, opacity: pulse }]} />;
 }
 
-export function ErrorView({ title, message, onRetry }: { title: string; message: string; onRetry: () => void }) {
+const ERROR_ICONS: Record<AppError['kind'], keyof typeof Ionicons.glyphMap> = {
+  offline: 'cloud-offline-outline',
+  timeout: 'hourglass-outline',
+  session: 'key-outline',
+  rateLimited: 'speedometer-outline',
+  riotDown: 'construct-outline',
+  catalogDown: 'images-outline',
+  changed: 'refresh-circle-outline',
+  unknown: 'alert-circle-outline',
+};
+
+/** Full-screen error with a friendly explanation, the technical detail in small print, and the next step. */
+export function ErrorView({ error, onRetry, onSignIn }: { error: AppError; onRetry: () => void; onSignIn?: () => void }) {
+  const copy = describe(error);
   return (
     <View style={styles.centered}>
-      <Ionicons name="cloud-offline-outline" size={44} color={colors.red} />
-      <Text style={styles.errorTitle}>{title.toUpperCase()}</Text>
-      <Text style={styles.errorText}>{message}</Text>
-      <Button label="Try again" onPress={onRetry} />
+      <Ionicons name={ERROR_ICONS[error.kind]} size={44} color={colors.red} />
+      <Text style={styles.errorTitle}>{copy.title.toUpperCase()}</Text>
+      <Text style={styles.errorText}>{copy.message}</Text>
+      {copy.action === 'signIn' && onSignIn ? (
+        <Button label="Sign in" onPress={onSignIn} />
+      ) : (
+        <Button label="Try again" onPress={onRetry} />
+      )}
+      {error.detail && <Text style={styles.errorDetail}>{error.detail}</Text>}
+    </View>
+  );
+}
+
+export function Notice({ text }: { text: string }) {
+  return (
+    <View style={styles.notice}>
+      <Ionicons name="information-circle-outline" size={16} color={colors.muted} />
+      <Text style={styles.noticeText}>{text}</Text>
     </View>
   );
 }
@@ -155,4 +183,16 @@ const styles = StyleSheet.create({
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 12 },
   errorTitle: { fontFamily: fonts.display, color: colors.text, fontSize: 22, letterSpacing: 1.5, textAlign: 'center' },
   errorText: { fontFamily: fonts.body, color: colors.muted, fontSize: 13, textAlign: 'center', marginBottom: 8 },
+  errorDetail: { fontFamily: fonts.body, color: colors.muted, fontSize: 11, opacity: 0.6, marginTop: 8, textAlign: 'center' },
+  notice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: colors.surface,
+    borderColor: colors.line,
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 10,
+  },
+  noticeText: { flex: 1, fontFamily: fonts.body, color: colors.muted, fontSize: 12 },
 });

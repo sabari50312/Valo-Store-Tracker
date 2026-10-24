@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ErrorView, SectionHeader } from '@/components/ui';
 import { Chroma, Skin } from '@/lib/catalog';
+import { AppError } from '@/lib/errors';
 import { colors, fonts } from '@/lib/theme';
 import { useCatalog } from '@/lib/use-catalog';
 import { toggleWish, useWishlist, wishFromSkin } from '@/lib/wishlist';
@@ -17,11 +18,11 @@ export default function SkinScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { catalog, error, retry } = useCatalog();
 
-  if (error) return <ErrorView title="Couldn't load skin" message={error} onRetry={retry} />;
+  if (error) return <ErrorView error={error} onRetry={retry} />;
   if (!catalog) return <ActivityIndicator style={styles.flex} color={colors.red} />;
 
   const skin = catalog.byId.get(id);
-  if (!skin) return <ErrorView title="Skin not found" message={id} onRetry={() => router.back()} />;
+  if (!skin) return <ErrorView error={new AppError('changed', `unknown skin ${id}`)} onRetry={() => router.back()} />;
   return <SkinDetail skin={skin} />;
 }
 

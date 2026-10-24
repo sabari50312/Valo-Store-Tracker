@@ -1,18 +1,19 @@
-import { StoreSkeleton, StoreView } from '@/components/store';
+import { SignedOutView, StoreSkeleton, StoreView } from '@/components/store';
 import { ErrorView } from '@/components/ui';
 import { useStore } from '@/lib/store-context';
 
 export default function StoreScreen() {
-  const { state, refresh } = useStore();
+  const { state, refresh, openLogin } = useStore();
 
   switch (state.kind) {
     case 'store':
       return <StoreView store={state.store} onRefresh={refresh} />;
     case 'error':
-      return <ErrorView title="Couldn't load your store" message={state.message} onRetry={refresh} />;
+      return <ErrorView error={state.error} onRetry={refresh} onSignIn={openLogin} />;
     case 'loading':
       return <StoreSkeleton label={state.label} />;
+    case 'signedOut':
     case 'login':
-      return <StoreSkeleton label="waiting for Riot sign-in…" />;
+      return <SignedOutView onSignIn={openLogin} />;
   }
 }

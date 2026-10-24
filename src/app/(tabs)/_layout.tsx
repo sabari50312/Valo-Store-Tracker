@@ -29,6 +29,13 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => <Ionicons name="heart" size={size} color={color as string} />,
         }}
       />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: 'SETTINGS',
+          tabBarIcon: ({ color, size }) => <Ionicons name="settings-sharp" size={size} color={color as string} />,
+        }}
+      />
     </Tabs>
   );
 }
