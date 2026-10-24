@@ -48,14 +48,15 @@ Scan the QR code with Expo Go. Background alerts are best tested in a release bu
 
 ### Releases
 
-`.github/workflows/release.yml` builds a signed APK on GitHub's runners and publishes it as a GitHub Release when you push a version tag:
+`.github/workflows/release.yml` builds a signed APK on GitHub's runners and publishes it as a GitHub Release. Start it either way:
 
-```bash
-git tag v1.0.0 && git push origin v1.0.0
-```
+- **From GitHub:** Actions tab → **Release APK** → **Run workflow**, enter a version like `1.2.0`. Leave the version empty for a test APK (downloadable from the run, no release).
+- **From the terminal:** `git tag v1.2.0 && git push origin v1.2.0`
 
-- The tag sets the app version: `v1.2.3` becomes version `1.2.3` with versionCode `10203` (`app.config.js`). Always increase it, or Android won't install over the older APK.
-- **Run workflow** in the Actions tab builds a test APK as an artifact (version `0.0.<run number>`) without publishing a release. Its low versionCode means it won't install over a tagged release; uninstall first.
+Don't use **Draft a new release** on the Releases page; the workflow creates the release itself.
+
+- The version becomes versionCode `10200` for `1.2.0` (`app.config.js`). Always increase it, or Android won't install over the older APK.
+- Test builds are version `0.0.<run number>`. Their low versionCode means they won't install over a released version; uninstall first.
 - Release builds are signed by `plugins/withReleaseSigning.js` using these repository secrets:
 
   | Secret | Value |

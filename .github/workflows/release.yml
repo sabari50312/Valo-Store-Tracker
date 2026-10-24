@@ -1,12 +1,17 @@
 name: Release APK
 
-# Push a tag like v1.2.0 to build a signed APK and publish it as a GitHub Release.
-# "Run workflow" from the Actions tab builds the same APK as a downloadable
-# artifact without creating a release.
+# Builds a signed APK and publishes it as a GitHub Release. Two ways to start it:
+#   - Actions tab > Release APK > Run workflow, and enter a version like 1.2.0.
+#     Leave the version empty for a test build (downloadable artifact, no release).
+#   - Push a tag like v1.2.0.
 on:
   push:
     tags: ['v*.*.*']
   workflow_dispatch:
+    inputs:
+      version:
+        description: Version to release, like 1.2.0. Leave empty for a test build without a release.
+        required: false
 
 permissions:
   contents: write
@@ -17,6 +22,33 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7
+
+      - name: Work out version
+        id: version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            version="${GITHUB_REF_NAME#v}"
+            release=true
+          elif [[ -n "$INPUT_VERSION" ]]; then
+            version="${INPUT_VERSION#v}"
+            release=true
+            if git ls-remote --exit-code --tags origin "refs/tags/v$version" > /dev/null; then
+              echo "::error::v$version already exists. Pick a higher version."
+              exit 1
+            fi
+          else
+            version="0.0.${GITHUB_RUN_NUMBER}"
+            release=false
+          fi
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Version must look like 1.2.0, got \"$version\""
+            exit 1
+          fi
+          echo "app=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+          echo "release=$release" >> "$GITHUB_OUTPUT"
 
       - uses: actions/setup-node@v7
         with:
@@ -32,15 +64,6 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-
-      - name: Work out version
-        id: version
-        run: |
-          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
-            echo "app=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
-          else
-            echo "app=0.0.${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
-          fi
 
       - name: Restore signing key
         env:
@@ -81,7 +104,10 @@ jobs:
           path: ${{ steps.apk.outputs.path }}
 
       - name: Publish release
-        if: github.ref_type == 'tag'
+        if: steps.version.outputs.release == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" "${{ steps.apk.outputs.path }}" --title "$GITHUB_REF_NAME" --generate-notes
+          TAG: ${{ steps.version.outputs.tag }}
+          APK: ${{ steps.apk.outputs.path }}
+        # --target creates the tag on this commit when the run came from the Actions tab.
+        run: gh release create "$TAG" "$APK" --target "$GITHUB_SHA" --title "$TAG" --generate-notes
