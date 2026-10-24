@@ -1,49 +1,59 @@
-# valorant-store
+# Val Store
 
-Android app (Expo) for checking your Valorant store from your phone.
+Check your VALORANT store from your phone, without opening your PC.
 
-- Daily offers, night market, featured bundle and the Kingdom Credits accessory store
-- Wallet balances (VP, Kingdom Credits, Radianite)
-- Tap a skin to see its variants and play the in-game preview video for each upgrade level
-- Wishlist: search any skin, and get a notification when one appears in your store
+- **Daily store**, **night market**, **featured bundle** and the **accessory store**, with a countdown to the next reset
+- **Wallet**: your VP, Kingdom Credits and Radianite
+- **Skin previews**: tap any skin to see its variants and watch the in-game video for every upgrade level
+- **Wishlist alerts**: pick the skins you want and get a notification when one shows up in your store
 
-## Run on your phone
+> Val Store is a fan-made app. It isn't affiliated with or endorsed by Riot Games. VALORANT and Riot Games are trademarks of Riot Games, Inc.
 
-1. Install **Expo Go** from the Play Store.
-2. Log in to a free Expo account once (`npx expo login`), then start the dev server from WSL:
+## Is it safe?
 
-   ```bash
-   npx expo start --tunnel
-   ```
+- **Your password never touches Val Store.** You sign in on Riot's own login page. The app doesn't see, read or store your username or password.
+- **No servers, no tracking.** There's no Val Store backend, account, analytics or ads. Your session and wishlist stay on your phone.
+- **Read-only.** Val Store only looks at your store and wallet. It never buys, spends or changes anything on your account.
+- **Sign out any time** in Settings, which removes your session from the phone.
 
-   Tunnel mode is needed because your phone can't reach a server inside WSL directly. Without an Expo account, `npx expo start --tunnel ngrok` works instead.
-3. Scan the QR code with Expo Go.
+Read the full [privacy policy](PRIVACY.md).
 
-## How login works
+As with any unofficial app, use it at your own risk. Riot can change things on their side at any time, which may stop the app working until it's updated.
 
-- The app loads Riot's login page in a WebView. Log in once with your Riot ID; Google/Apple sign-in usually doesn't work inside WebViews.
-- The WebView keeps Riot's session cookie. After that, every launch, pull-to-refresh and background check signs in silently: `expo/fetch` with `credentials: 'include'` shares the WebView's cookie store on Android, and `redirect: 'manual'` lets the app read the fresh token from Riot's redirect (`silentAuth()` in `src/lib/riot.ts`).
-- When Riot's session expires (roughly 1 to 3 weeks), the login page appears again.
+## Install
+
+1. Download the latest `val-store-x.y.z.apk` from [Releases](../../releases).
+2. Open it on your Android phone. If asked, allow your browser to install apps.
+3. Open Val Store and sign in with your Riot ID and password. Google and Apple sign-in aren't supported.
+
+New versions install over the old one and keep you signed in.
 
 ## Wishlist alerts
 
-Turn on **Store alerts** in the Wishlist tab. A background task (`src/lib/alerts.ts`, defined in `index.ts` so it exists before anything renders) contacts Riot once per store rotation. Android can't run code at an exact time, so the task wakes about every 30 minutes and returns immediately until the store has reset; the alert lands within roughly 30 minutes of the reset, or later if Android defers it (battery saver). A night market that opens mid-rotation is picked up at the next daily reset. Each find is notified once per store rotation, and nothing is sent for skins you've already seen in the app. **Check now** runs the same check immediately, which is also the quickest way to confirm silent sign-in works on your phone.
+In the **Wishlist** tab, search for skins and tap the heart. Then turn on **Store alerts**. Val Store checks once each time your store resets and notifies you if anything on your wishlist is in it.
 
-## Data
+Alerts usually arrive within about 30 minutes of the reset. Android decides the exact timing, and battery saver can delay it. If alerts don't arrive, set Val Store's battery usage to **Unrestricted** in Android settings.
 
-The app then calls Riot's entitlements, userinfo, region and storefront endpoints directly. Skin names, images and rarity come from [valorant-api.com](https://valorant-api.com). Endpoint reference: [valapidocs](https://valapidocs.techchrism.me/).
+---
 
-These are unofficial Riot client APIs and can change without notice.
+## Development
 
-## Releases
+```bash
+npm ci
+npx expo start --tunnel ngrok
+```
 
-`.github/workflows/release.yml` builds a signed APK on GitHub's runners and publishes it as a GitHub Release.
+Scan the QR code with Expo Go. Background alerts are best tested in a release build.
+
+### Releases
+
+`.github/workflows/release.yml` builds a signed APK on GitHub's runners and publishes it as a GitHub Release when you push a version tag:
 
 ```bash
 git tag v1.0.0 && git push origin v1.0.0
 ```
 
-- The tag sets the app version: `v1.2.3` becomes version `1.2.3` with versionCode `10203` (see `app.config.js`). Always increase it, or Android refuses to install over the older APK.
+- The tag sets the app version: `v1.2.3` becomes version `1.2.3` with versionCode `10203` (`app.config.js`). Always increase it, or Android won't install over the older APK.
 - **Run workflow** in the Actions tab builds a test APK as an artifact (version `0.0.<run number>`) without publishing a release. Its low versionCode means it won't install over a tagged release; uninstall first.
 - Release builds are signed by `plugins/withReleaseSigning.js` using these repository secrets:
 
@@ -54,3 +64,7 @@ git tag v1.0.0 && git push origin v1.0.0
   | `ANDROID_KEY_ALIAS` | key alias |
 
 Keep a backup of the keystore. Every update must be signed with the same key, or it can't be installed over the existing app.
+
+## License
+
+[MIT](LICENSE)
