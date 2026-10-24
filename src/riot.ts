@@ -21,6 +21,7 @@ export type Item = {
   name: string;
   image: string | null;
   tierColor: string | null;
+  tierIcon: string | null;
   price: number;
   basePrice?: number;
   discount?: number;
@@ -54,7 +55,7 @@ async function json<T = any>(url: string, init?: RequestInit): Promise<T> {
 
 // --- valorant-api.com catalog (names, images, rarity) ----------------------
 
-type SkinInfo = { name: string; image: string | null; tierColor: string | null };
+type SkinInfo = { name: string; image: string | null; tierColor: string | null; tierIcon: string | null };
 let catalog: Promise<Map<string, SkinInfo>> | null = null;
 
 function loadCatalog() {
@@ -63,17 +64,19 @@ function loadCatalog() {
       json('https://valorant-api.com/v1/contenttiers'),
       json('https://valorant-api.com/v1/weapons/skins'),
     ]);
-    const tierColor = new Map<string, string>(
-      tiers.data.map((t: any) => [t.uuid, '#' + t.highlightColor.slice(0, 6)]),
+    const tierById = new Map<string, { color: string; icon: string }>(
+      tiers.data.map((t: any) => [t.uuid, { color: '#' + t.highlightColor.slice(0, 6), icon: t.displayIcon }]),
     );
     const byLevel = new Map<string, SkinInfo>();
     for (const skin of skins.data) {
       const chroma = skin.chromas?.[0] ?? {};
+      const tier = tierById.get(skin.contentTierUuid);
       for (const level of skin.levels ?? []) {
         byLevel.set(level.uuid, {
           name: skin.displayName,
           image: level.displayIcon ?? chroma.fullRender ?? skin.displayIcon ?? null,
-          tierColor: tierColor.get(skin.contentTierUuid) ?? null,
+          tierColor: tier?.color ?? null,
+          tierIcon: tier?.icon ?? null,
         });
       }
     }
@@ -122,7 +125,7 @@ export async function getStore(t: Tokens): Promise<Store> {
     },
   );
 
-  const skin = (id: string): SkinInfo => skins.get(id) ?? { name: 'Unknown item', image: null, tierColor: null };
+  const skin = (id: string): SkinInfo => skins.get(id) ?? { name: 'Unknown item', image: null, tierColor: null, tierIcon: null };
 
   const panel = raw.SkinsPanelLayout;
   const daily = panel.SingleItemStoreOffers.map((o: any) => ({
