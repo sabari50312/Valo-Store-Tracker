@@ -15,6 +15,7 @@ Check your VALORANT store from your phone, without opening your PC.
 - **No servers, no tracking.** There's no Val Store backend, account, analytics or ads. Your session and wishlist stay on your phone.
 - **Read-only.** Val Store only looks at your store and wallet. It never buys, spends or changes anything on your account.
 - **Sign out any time** in Settings, which removes your session from the phone.
+- **Open source.** All of the app's code is in this repository, so anyone can check these claims.
 
 Read the full [privacy policy](PRIVACY.md).
 
