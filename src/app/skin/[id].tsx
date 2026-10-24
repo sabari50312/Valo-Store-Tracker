@@ -1,6 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { useEffect, useState } from 'react';
@@ -56,7 +55,7 @@ function SkinDetail({ skin }: { skin: Skin }) {
 
   return (
     <ScrollView style={styles.flex} contentContainerStyle={styles.scroll}>
-      <LinearGradient colors={[tint + '66', colors.bg]} style={[styles.top, { paddingTop: insets.top + 8 }]}>
+      <View style={[styles.top, { paddingTop: insets.top + 8 }]}>
         <View style={styles.topBar}>
           <IconButton name="chevron-back" onPress={() => router.back()} />
           <IconButton
@@ -66,21 +65,21 @@ function SkinDetail({ skin }: { skin: Skin }) {
           />
         </View>
 
-        <View style={styles.media}>
+        <View style={[styles.media, { backgroundColor: tint + '24' }]}>
           {video ? (
             <VideoView player={player} style={styles.fill} contentFit="contain" nativeControls />
           ) : (
             chroma?.render && <Image source={chroma.render} style={styles.fill} contentFit="contain" transition={200} />
           )}
         </View>
-      </LinearGradient>
+      </View>
 
       <View style={styles.body}>
         <View style={styles.titleRow}>
           {skin.tierIcon && <Image source={skin.tierIcon} style={styles.tierIcon} contentFit="contain" />}
           <Text style={styles.name}>{skin.name.toUpperCase()}</Text>
         </View>
-        {chroma && chroma.name !== skin.name && <Text style={styles.sub}>{chroma.name}</Text>}
+        {chroma && chroma.name !== skin.name && <Text style={[styles.sub, styles.chromaName]}>{chroma.name}</Text>}
 
         {skin.chromas.length > 1 && (
           <>
@@ -113,7 +112,7 @@ function SkinDetail({ skin }: { skin: Skin }) {
               <View style={[styles.levelNum, active && { backgroundColor: colors.red }]}>
                 <Text style={styles.levelNumText}>{i + 1}</Text>
               </View>
-              <Text style={styles.levelKind}>{spaced(l.kind).toUpperCase()}</Text>
+              <Text style={styles.levelKind}>{spaced(l.kind)}</Text>
               {l.video && <Ionicons name={active ? 'pause' : 'play'} size={18} color={active ? colors.red : colors.text} />}
             </Pressable>
           );
@@ -143,18 +142,19 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(15,25,35,0.45)',
+    backgroundColor: colors.surface,
   },
-  media: { height: 230, marginTop: 8, borderRadius: 8, overflow: 'hidden' },
+  media: { height: 220, marginTop: 12, borderRadius: 12, overflow: 'hidden' },
 
-  body: { paddingHorizontal: 16, gap: 10 },
-  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 8 },
+  body: { paddingHorizontal: 16, paddingTop: 16, gap: 12 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   tierIcon: { width: 24, height: 24 },
-  name: { flex: 1, fontFamily: fonts.display, color: colors.text, fontSize: 32, lineHeight: 34, letterSpacing: 1 },
+  name: { flex: 1, fontFamily: fonts.display, color: colors.text, fontSize: 28, lineHeight: 30, letterSpacing: 1 },
   sub: { fontFamily: fonts.body, color: colors.muted, fontSize: 13 },
+  chromaName: { marginTop: -6 },
 
-  swatches: { gap: 10, paddingVertical: 2 },
-  swatch: { width: 52, height: 52, borderRadius: 26, overflow: 'hidden', borderWidth: 2, borderColor: colors.line },
+  swatches: { gap: 8, paddingVertical: 2 },
+  swatch: { width: 52, height: 52, borderRadius: 8, overflow: 'hidden', borderWidth: 2, borderColor: colors.surface },
   swatchActive: { borderColor: colors.red },
 
   level: {
@@ -163,19 +163,19 @@ const styles = StyleSheet.create({
     gap: 12,
     padding: 12,
     backgroundColor: colors.surface,
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.line,
+    borderColor: colors.surface,
   },
   levelActive: { borderColor: colors.red },
   levelNum: {
     width: 28,
     height: 28,
-    borderRadius: 4,
+    borderRadius: 8,
     backgroundColor: colors.surfaceHigh,
     alignItems: 'center',
     justifyContent: 'center',
   },
   levelNumText: { fontFamily: fonts.display, color: colors.white, fontSize: 16 },
-  levelKind: { flex: 1, fontFamily: fonts.displayMedium, color: colors.text, fontSize: 17, letterSpacing: 1 },
+  levelKind: { flex: 1, fontFamily: fonts.bodyBold, color: colors.text, fontSize: 14 },
 });

@@ -3,7 +3,7 @@ import Constants from 'expo-constants';
 import { ReactNode } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { Button, Hero } from '@/components/ui';
+import { Button, Header } from '@/components/ui';
 import { useStore } from '@/lib/store-context';
 import { colors, fonts } from '@/lib/theme';
 
@@ -19,7 +19,7 @@ export default function SettingsScreen() {
 
   return (
     <ScrollView style={styles.flex} contentContainerStyle={styles.scroll}>
-      <Hero label="Val Store" title="SETTINGS" />
+      <Header title="Settings" />
       <View style={styles.body}>
         <Card title="Account">
           <Text style={styles.text}>{signedIn ? `Signed in as ${riotId}` : 'Not signed in'}</Text>
@@ -61,7 +61,7 @@ function Card({ title, children }: { title: string; children: ReactNode }) {
 function Line({ icon, text }: { icon: keyof typeof Ionicons.glyphMap; text: string }) {
   return (
     <View style={styles.line}>
-      <Ionicons name={icon} size={18} color={colors.red} />
+      <Ionicons name={icon} size={18} color={colors.muted} />
       <Text style={[styles.text, styles.flex]}>{text}</Text>
     </View>
   );
@@ -70,16 +70,9 @@ function Line({ icon, text }: { icon: keyof typeof Ionicons.glyphMap; text: stri
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   scroll: { paddingBottom: 32 },
-  body: { paddingHorizontal: 16, marginTop: -8, gap: 12 },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.line,
-    padding: 14,
-    gap: 12,
-  },
-  cardTitle: { fontFamily: fonts.display, color: colors.text, fontSize: 18, letterSpacing: 1.5 },
+  body: { paddingHorizontal: 16, paddingTop: 12, gap: 12 },
+  card: { backgroundColor: colors.surface, borderRadius: 12, padding: 16, gap: 12 },
+  cardTitle: { fontFamily: fonts.displayMedium, color: colors.text, fontSize: 16, letterSpacing: 1.5 },
   line: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
   text: { fontFamily: fonts.body, color: colors.text, fontSize: 13, lineHeight: 19 },
   muted: { fontFamily: fonts.body, color: colors.muted, fontSize: 12, lineHeight: 18 },

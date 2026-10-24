@@ -17,6 +17,8 @@ type Ctx = {
   state: StoreState;
   riotId: string | null;
   refresh: () => void;
+  refreshing: boolean;
+  pullToRefresh: () => void;
   openLogin: () => void;
   closeLogin: () => void;
   onLogin: (t: Tokens) => void;
@@ -28,9 +30,11 @@ const StoreContext = createContext<Ctx | null>(null);
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<StoreState>({ kind: 'loading', label: 'signing in…' });
   const [riotId, setRiotId] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const load = useCallback(async (tokens: Tokens) => {
-    setState({ kind: 'loading', label: 'loading your offers…' });
+  // quiet: keep the current screen up (pull-to-refresh shows its own spinner).
+  const load = useCallback(async (tokens: Tokens, quiet = false) => {
+    if (!quiet) setState({ kind: 'loading', label: 'loading your offers…' });
     try {
       // The catalog only adds names and images; the store still loads without it.
       const [session, catalog] = await Promise.all([openSession(tokens), loadCatalog().catch(() => null)]);
@@ -53,6 +57,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setState({ kind: 'loading', label: 'signing in…' });
     silentAuth().then(afterSilentAuth, onError);
   }, [afterSilentAuth, onError]);
+
+  const pullToRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      const tokens = await silentAuth();
+      if (tokens) await load(tokens, true);
+      else setState({ kind: 'signedOut' });
+    } catch (e) {
+      onError(e);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [load, onError]);
 
   // Initial state is already "signing in", so start straight with the request.
   useEffect(() => {
@@ -80,6 +97,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         state,
         riotId,
         refresh,
+        refreshing,
+        pullToRefresh,
         openLogin: () => setState({ kind: 'login' }),
         closeLogin: () => setState({ kind: 'signedOut' }),
         onLogin,

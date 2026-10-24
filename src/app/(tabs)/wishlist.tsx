@@ -4,13 +4,13 @@ import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 
-import { Button, Hero, SectionHeader } from '@/components/ui';
+import { Button, Caption, Header, SectionHeader } from '@/components/ui';
 import { alertsEnabled, checkWishlist, disableAlerts, enableAlerts } from '@/lib/alerts';
 import { colors, fonts } from '@/lib/theme';
 import { useCatalog } from '@/lib/use-catalog';
 import { toggleWish, useWishlist, WishItem, wishFromSkin } from '@/lib/wishlist';
 
-type Row = WishItem & { tierIcon: string | null };
+type Row = WishItem & { tierIcon: string | null; tierColor: string | null };
 
 export default function WishlistScreen() {
   const wishlist = useWishlist();
@@ -22,21 +22,22 @@ export default function WishlistScreen() {
   const rows: Row[] = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) {
-      return wishlist.map(w => ({ ...w, tierIcon: catalog?.byId.get(w.skinId)?.tierIcon ?? null }));
+      return wishlist.map(w => {
+        const skin = catalog?.byId.get(w.skinId);
+        return { ...w, tierIcon: skin?.tierIcon ?? null, tierColor: skin?.tierColor ?? null };
+      });
     }
     return (catalog?.skins ?? [])
       .filter(s => s.name.toLowerCase().includes(q))
       .slice(0, 60)
-      .map(s => ({ ...wishFromSkin(s), tierIcon: s.tierIcon }));
+      .map(s => ({ ...wishFromSkin(s), tierIcon: s.tierIcon, tierColor: s.tierColor }));
   }, [query, wishlist, catalog]);
 
   const header = (
     <View>
-      <Hero
-        label="Wishlist"
-        title={`${wishlist.length} ${wishlist.length === 1 ? 'SKIN' : 'SKINS'}`}
-        caption="get pinged when one shows up in your store"
-      />
+      <Header title="Wishlist">
+        <Caption text={`${wishlist.length} ${wishlist.length === 1 ? 'skin' : 'skins'} saved. Get pinged when one shows up in your store.`} />
+      </Header>
       <View style={styles.body}>
         <AlertsCard />
         <View style={styles.search}>
@@ -82,12 +83,12 @@ export default function WishlistScreen() {
 function SkinRow({ row, wished }: { row: Row; wished: boolean }) {
   return (
     <Pressable onPress={() => router.push(`/skin/${row.skinId}`)} style={({ pressed }) => [styles.row, pressed && { opacity: 0.85 }]}>
-      <View style={styles.rowArt}>
+      <View style={[styles.rowArt, { backgroundColor: (row.tierColor ?? colors.surfaceHigh) + '24' }]}>
         {row.image && <Image source={row.image} style={styles.rowImage} contentFit="contain" />}
       </View>
       <View style={styles.rowText}>
         <Text style={styles.rowName} numberOfLines={1}>
-          {row.name.toUpperCase()}
+          {row.name}
         </Text>
       </View>
       {row.tierIcon && <Image source={row.tierIcon} style={styles.rowTier} contentFit="contain" />}
@@ -164,31 +165,15 @@ function AlertsCard() {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   list: { paddingBottom: 32 },
-  body: { paddingHorizontal: 16, marginTop: -8, gap: 12, marginBottom: 12 },
+  body: { paddingHorizontal: 16, paddingTop: 12, gap: 12, marginBottom: 12 },
 
-  alerts: {
-    backgroundColor: colors.surface,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.line,
-    padding: 14,
-    gap: 12,
-  },
+  alerts: { backgroundColor: colors.surface, borderRadius: 12, padding: 16, gap: 12 },
   alertsRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  alertsTitle: { fontFamily: fonts.display, color: colors.text, fontSize: 18, letterSpacing: 1.5 },
+  alertsTitle: { fontFamily: fonts.displayMedium, color: colors.text, fontSize: 16, letterSpacing: 1.5 },
   alertsSub: { fontFamily: fonts.body, color: colors.muted, fontSize: 12, marginTop: 2 },
   alertsStatus: { fontFamily: fonts.bodyMedium, color: colors.text, fontSize: 12, lineHeight: 17 },
 
-  search: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: colors.surface,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.line,
-    paddingHorizontal: 12,
-  },
+  search: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 12 },
   searchInput: { flex: 1, fontFamily: fonts.body, color: colors.text, fontSize: 15, paddingVertical: 12 },
 
   row: {
@@ -196,17 +181,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     marginHorizontal: 16,
-    padding: 10,
+    padding: 8,
+    paddingRight: 12,
     backgroundColor: colors.surface,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.line,
+    borderRadius: 12,
   },
-  rowArt: { width: 92, height: 40 },
+  rowArt: { width: 96, height: 56, borderRadius: 8, padding: 8 },
   rowImage: { width: '100%', height: '100%' },
   rowText: { flex: 1 },
-  rowName: { fontFamily: fonts.display, color: colors.text, fontSize: 17, letterSpacing: 0.5 },
-  rowTier: { width: 18, height: 18 },
+  rowName: { fontFamily: fonts.bodyBold, color: colors.text, fontSize: 14, lineHeight: 18 },
+  rowTier: { width: 16, height: 16 },
   sep: { height: 8 },
   empty: { fontFamily: fonts.body, color: colors.muted, fontSize: 13, textAlign: 'center', paddingHorizontal: 32, marginTop: 12 },
 });

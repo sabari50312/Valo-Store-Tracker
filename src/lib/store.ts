@@ -14,9 +14,9 @@ export type Item = {
   discount?: number;
 };
 
-export type AccessoryOffer = Accessory & { price: number };
+export type AccessoryOffer = Accessory & { id: string; price: number };
 
-export type Bundle = { name: string; image: string | null; price: number; remaining: number; items: string[] };
+export type Bundle = { id: string; name: string; image: string | null; price: number; remaining: number; items: string[] };
 
 export type Store = {
   fetchedAt: number;
@@ -75,7 +75,7 @@ export async function loadStore(session: Session, catalog: Catalog | null): Prom
           acc.AccessoryStoreOffers.map(async (o: any) => {
             const reward = o.Offer.Rewards[0];
             const info = await lookupAccessory(reward.ItemTypeID, reward.ItemID);
-            return { ...info, price: o.Offer.Cost[CURRENCY.KC] ?? Object.values<number>(o.Offer.Cost)[0] ?? 0 };
+            return { ...info, id: reward.ItemID, price: o.Offer.Cost[CURRENCY.KC] ?? Object.values<number>(o.Offer.Cost)[0] ?? 0 };
           }),
         ),
       }
@@ -85,6 +85,7 @@ export async function loadStore(session: Session, catalog: Catalog | null): Prom
     (raw.FeaturedBundle?.Bundles ?? []).map(async (b: any) => {
       const info = await json(`https://valorant-api.com/v1/bundles/${b.DataAssetID}`).catch(() => null);
       return {
+        id: b.DataAssetID,
         name: info?.data.displayName ?? 'Bundle',
         image: info?.data.displayIcon ?? null,
         price: b.TotalDiscountedCost?.[CURRENCY.VP] ?? 0,

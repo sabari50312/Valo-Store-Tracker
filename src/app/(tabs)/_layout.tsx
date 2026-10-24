@@ -11,29 +11,35 @@ export default function TabLayout() {
         sceneStyle: { backgroundColor: colors.bg },
         tabBarActiveTintColor: colors.red,
         tabBarInactiveTintColor: colors.muted,
-        tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.line },
-        tabBarLabelStyle: { fontFamily: fonts.displayMedium, fontSize: 13, letterSpacing: 1 },
+        tabBarStyle: { backgroundColor: colors.bg, borderTopColor: colors.line },
+        tabBarLabelStyle: { fontFamily: fonts.bodyMedium, fontSize: 11 },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'STORE',
-          tabBarIcon: ({ color, size }) => <Ionicons name="bag-handle" size={size} color={color as string} />,
+          title: 'Store',
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'bag-handle' : 'bag-handle-outline'} size={size} color={color as string} />
+          ),
         }}
       />
       <Tabs.Screen
         name="wishlist"
         options={{
-          title: 'WISHLIST',
-          tabBarIcon: ({ color, size }) => <Ionicons name="heart" size={size} color={color as string} />,
+          title: 'Wishlist',
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'heart' : 'heart-outline'} size={size} color={color as string} />
+          ),
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
-          title: 'SETTINGS',
-          tabBarIcon: ({ color, size }) => <Ionicons name="settings-sharp" size={size} color={color as string} />,
+          title: 'Settings',
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'settings' : 'settings-outline'} size={size} color={color as string} />
+          ),
         }}
       />
     </Tabs>

@@ -8,11 +8,10 @@ import { AccessoryOffer, Bundle, Item, Store } from '@/lib/store';
 import { colors, fonts, KC_ICON, RAD_ICON, VP_ICON } from '@/lib/theme';
 import { useWishlist } from '@/lib/wishlist';
 
-import { Button, clock, Hero, Notice, Price, SectionHeader, short, Skeleton, useNow } from './ui';
+import { Button, Caption, clock, Countdown, Header, Notice, Pill, Price, SectionHeader, short, Skeleton } from './ui';
 
-export function StoreView({ store, onRefresh }: { store: Store; onRefresh: () => void }) {
-  const now = useNow();
-  const left = (remaining: number) => remaining - (now - store.fetchedAt) / 1000;
+export function StoreView({ store, refreshing, onRefresh }: { store: Store; refreshing: boolean; onRefresh: () => void }) {
+  const deadline = (remaining: number) => store.fetchedAt + remaining * 1000;
   const wished = new Set(useWishlist().map(w => w.levelId));
 
   return (
@@ -20,47 +19,47 @@ export function StoreView({ store, onRefresh }: { store: Store; onRefresh: () =>
       style={styles.flex}
       contentContainerStyle={styles.scroll}
       refreshControl={
-        <RefreshControl refreshing={false} onRefresh={onRefresh} colors={[colors.red]} progressBackgroundColor={colors.surface} />
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.red]} progressBackgroundColor={colors.surface} />
       }
     >
-      <Hero label="Daily store" title={clock(left(store.daily.remaining))} caption="until your offers reset">
-        {store.wallet && (
-          <View style={styles.wallet}>
-            <WalletPill icon={VP_ICON} value={store.wallet.vp} />
-            <WalletPill icon={KC_ICON} value={store.wallet.kc} />
-            <WalletPill icon={RAD_ICON} value={store.wallet.rad} />
-          </View>
-        )}
-      </Hero>
+      <Header title="Store" right={store.wallet && <Wallet wallet={store.wallet} />}>
+        <Text style={styles.clock}>
+          <Countdown deadline={deadline(store.daily.remaining)} format={clock} />
+        </Text>
+        <Caption text="until your offers reset" />
+      </Header>
 
       <View style={styles.body}>
         {store.catalogMissing && <Notice text="Skin names and images couldn't load. Pull down to try again." />}
-        {store.daily.items.map((it, i) => (
-          <SkinCard key={i} item={it} wished={wished.has(it.levelId)} />
-        ))}
+        <SectionHeader title="Today's offers" />
+        <View style={styles.grid}>
+          {store.daily.items.map(it => (
+            <SkinTile key={it.levelId} item={it} wished={wished.has(it.levelId)} />
+          ))}
+        </View>
 
         {store.nightMarket && (
           <>
-            <SectionHeader title="Night market" chip={short(left(store.nightMarket.remaining))} />
-            {store.nightMarket.items.map((it, i) => (
-              <SkinCard key={i} item={it} wished={wished.has(it.levelId)} />
+            <SectionHeader title="Night market" endsIn={<Countdown deadline={deadline(store.nightMarket.remaining)} format={short} />} />
+            {store.nightMarket.items.map(it => (
+              <SkinRow key={it.levelId} item={it} wished={wished.has(it.levelId)} />
             ))}
           </>
         )}
 
-        {store.bundles.map((b, i) => (
-          <View key={i} style={styles.gap}>
-            <SectionHeader title="Featured bundle" chip={short(left(b.remaining))} />
+        {store.bundles.map(b => (
+          <View key={b.id} style={styles.gap}>
+            <SectionHeader title="Featured bundle" endsIn={<Countdown deadline={deadline(b.remaining)} format={short} />} />
             <BundleCard bundle={b} />
           </View>
         ))}
 
         {store.accessories && (
           <>
-            <SectionHeader title="Accessories" chip={short(left(store.accessories.remaining))} />
+            <SectionHeader title="Accessories" endsIn={<Countdown deadline={deadline(store.accessories.remaining)} format={short} />} />
             <View style={styles.grid}>
-              {store.accessories.items.map((a, i) => (
-                <AccessoryCard key={i} item={a} />
+              {store.accessories.items.map(a => (
+                <AccessoryCard key={a.id} item={a} />
               ))}
             </View>
           </>
@@ -73,11 +72,19 @@ export function StoreView({ store, onRefresh }: { store: Store; onRefresh: () =>
 export function StoreSkeleton({ label }: { label: string }) {
   return (
     <View style={styles.flex}>
-      <Hero label="Daily store" title="--:--:--" caption={label} />
+      <Header title="Store">
+        <Text style={styles.clock}>--:--:--</Text>
+        <Caption text={label} />
+      </Header>
       <View style={styles.body}>
-        {[0, 1, 2, 3].map(i => (
-          <Skeleton key={i} />
-        ))}
+        <SectionHeader title="Today's offers" />
+        <View style={styles.grid}>
+          {[0, 1, 2, 3].map(i => (
+            <View key={i} style={styles.half}>
+              <Skeleton height={176} />
+            </View>
+          ))}
+        </View>
       </View>
     </View>
   );
@@ -86,8 +93,10 @@ export function StoreSkeleton({ label }: { label: string }) {
 export function SignedOutView({ onSignIn }: { onSignIn: () => void }) {
   return (
     <View style={styles.flex}>
-      <Hero label="Val Store" title="SIGN IN" caption="to see your daily store, night market and wallet" />
-      <View style={[styles.body, styles.signedOut]}>
+      <Header title="Store">
+        <Caption text="Sign in to see your daily store, night market and wallet." />
+      </Header>
+      <View style={styles.body}>
         <View style={styles.trust}>
           <TrustLine icon="lock-closed-outline" text="You sign in on Riot's own login page. Val Store never sees or stores your password." />
           <TrustLine icon="phone-portrait-outline" text="Everything stays on your phone. There are no Val Store servers." />
@@ -103,63 +112,80 @@ export function SignedOutView({ onSignIn }: { onSignIn: () => void }) {
 function TrustLine({ icon, text }: { icon: keyof typeof Ionicons.glyphMap; text: string }) {
   return (
     <View style={styles.trustLine}>
-      <Ionicons name={icon} size={18} color={colors.red} />
+      <Ionicons name={icon} size={18} color={colors.muted} />
       <Text style={styles.trustText}>{text}</Text>
     </View>
   );
 }
 
-function WalletPill({ icon, value }: { icon: string; value: number }) {
+function Wallet({ wallet }: { wallet: NonNullable<Store['wallet']> }) {
   return (
-    <View style={styles.walletPill}>
-      <Price icon={icon} value={value} size={13} color={colors.white} />
+    <View style={styles.wallet}>
+      <Pill>
+        <Price icon={VP_ICON} value={wallet.vp} size={13} />
+      </Pill>
+      <Pill>
+        <Price icon={KC_ICON} value={wallet.kc} size={13} />
+      </Pill>
+      <Pill>
+        <Price icon={RAD_ICON} value={wallet.rad} size={13} />
+      </Pill>
     </View>
   );
 }
 
-function SkinCard({ item, wished }: { item: Item; wished: boolean }) {
-  const tint = item.tierColor ?? colors.surfaceHigh;
+/** Daily offers: a 2-column grid of art-on-top tiles. */
+function SkinTile({ item, wished }: { item: Item; wished: boolean }) {
   return (
     <Pressable
       disabled={!item.skinId}
       onPress={() => router.push(`/skin/${item.skinId}`)}
-      style={({ pressed }) => [styles.card, wished && styles.cardWished, pressed && styles.pressed]}
+      style={({ pressed }) => [styles.tile, pressed && styles.pressed]}
     >
-      <LinearGradient
-        colors={[tint + '59', tint + '14', 'transparent']}
-        locations={[0, 0.55, 1]}
-        start={{ x: 0, y: 1 }}
-        end={{ x: 1, y: 0 }}
-        style={StyleSheet.absoluteFill}
-      />
-      <View style={[styles.cardAccent, { backgroundColor: tint }]} />
-
-      <View style={styles.cardTop}>
-        {item.tierIcon ? <Image source={item.tierIcon} style={styles.tierIcon} contentFit="contain" /> : <View />}
-        <View style={styles.badges}>
-          {wished && (
-            <View style={[styles.badge, styles.badgeWish]}>
-              <Text style={styles.badgeText}>WISHLIST</Text>
-            </View>
-          )}
-          {item.discount != null && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>-{item.discount}%</Text>
-            </View>
-          )}
-        </View>
+      <View style={[styles.tileArt, { backgroundColor: tint(item.tierColor) }]}>
+        {item.image && <Image source={item.image} style={styles.art} contentFit="contain" transition={250} />}
+        {wished && <Ionicons name="heart" size={14} color={colors.red} style={styles.wishMark} />}
       </View>
-
-      {item.image && <Image source={item.image} style={styles.skinImage} contentFit="contain" transition={250} />}
-
-      <View style={styles.cardBottom}>
+      <View style={styles.tileInfo}>
         <Text style={styles.skinName} numberOfLines={2}>
-          {item.name.toUpperCase()}
+          {item.name}
         </Text>
-        <View style={styles.priceCol}>
-          {item.basePrice != null && <Text style={styles.strike}>{item.basePrice.toLocaleString()}</Text>}
+        <View style={styles.tileFooter}>
+          {item.tierIcon ? <Image source={item.tierIcon} style={styles.tierIcon} contentFit="contain" /> : <View />}
           <Price icon={VP_ICON} value={item.price} />
         </View>
+      </View>
+    </Pressable>
+  );
+}
+
+/** Night market: one row per offer, with the discount on the right. */
+function SkinRow({ item, wished }: { item: Item; wished: boolean }) {
+  return (
+    <Pressable
+      disabled={!item.skinId}
+      onPress={() => router.push(`/skin/${item.skinId}`)}
+      style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+    >
+      <View style={[styles.rowArt, { backgroundColor: tint(item.tierColor) }]}>
+        {item.image && <Image source={item.image} style={styles.art} contentFit="contain" transition={250} />}
+      </View>
+      <View style={styles.rowInfo}>
+        <View style={styles.rowNameLine}>
+          <Text style={[styles.skinName, styles.flexShrink]} numberOfLines={1}>
+            {item.name}
+          </Text>
+          {wished && <Ionicons name="heart" size={12} color={colors.red} />}
+        </View>
+        {item.basePrice != null && <Text style={styles.strike}>{item.basePrice.toLocaleString()}</Text>}
+      </View>
+      <View style={styles.rowPrice}>
+        {item.discount != null && (
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>−{item.discount}%</Text>
+          </View>
+        )}
+        <Price icon={VP_ICON} value={item.price} />
       </View>
     </Pressable>
   );
@@ -179,7 +205,7 @@ function BundleCard({ bundle }: { bundle: Bundle }) {
           <Text style={styles.bundleName} numberOfLines={1}>
             {bundle.name.toUpperCase()}
           </Text>
-          <Price icon={VP_ICON} value={bundle.price} size={17} />
+          <Price icon={VP_ICON} value={bundle.price} size={16} />
         </View>
         {bundle.items.length > 0 && (
           <Text style={styles.bundleItems} numberOfLines={2}>
@@ -194,8 +220,8 @@ function BundleCard({ bundle }: { bundle: Bundle }) {
 function AccessoryCard({ item }: { item: AccessoryOffer }) {
   const isCard = item.kind === 'Card';
   return (
-    <View style={styles.accessory}>
-      <View style={styles.accessoryArt}>
+    <View style={styles.tile}>
+      <View style={[styles.tileArt, styles.accessoryArt]}>
         {item.image ? (
           <Image source={item.image} style={isCard ? styles.fill : styles.accessoryIcon} contentFit={isCard ? 'cover' : 'contain'} />
         ) : (
@@ -204,85 +230,83 @@ function AccessoryCard({ item }: { item: AccessoryOffer }) {
           </Text>
         )}
       </View>
-      <View style={styles.accessoryInfo}>
-        <Text style={styles.accessoryKind}>{item.kind.toUpperCase()}</Text>
-        <Text style={styles.accessoryName} numberOfLines={1}>
-          {item.name}
-        </Text>
-        <Price icon={KC_ICON} value={item.price} size={13} />
+      <View style={styles.tileInfo}>
+        <View>
+          <Text style={styles.accessoryKind}>{item.kind.toUpperCase()}</Text>
+          <Text style={styles.skinName} numberOfLines={1}>
+            {item.name}
+          </Text>
+        </View>
+        <Price icon={KC_ICON} value={item.price} />
       </View>
     </View>
   );
 }
 
+// Rarity colour at ~14% so the art sits on a faint tint of its tier.
+const tint = (tierColor: string | null) => (tierColor ?? colors.surfaceHigh) + '24';
+
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  flexShrink: { flexShrink: 1 },
   fill: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   scroll: { paddingBottom: 32 },
-  body: { paddingHorizontal: 16, marginTop: -8, gap: 12 },
+  body: { paddingHorizontal: 16, paddingTop: 12, gap: 12 },
   gap: { gap: 12 },
   pressed: { opacity: 0.85, transform: [{ scale: 0.99 }] },
 
-  wallet: { flexDirection: 'row', gap: 8, marginTop: 14 },
-  signedOut: { gap: 16 },
-  trust: { backgroundColor: colors.surface, borderRadius: 8, borderWidth: 1, borderColor: colors.line, padding: 14, gap: 14 },
+  clock: {
+    fontFamily: fonts.display,
+    color: colors.red,
+    fontSize: 48,
+    lineHeight: 52,
+    letterSpacing: 1,
+    marginTop: 8,
+    fontVariant: ['tabular-nums'],
+  },
+  wallet: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 6, flexShrink: 1 },
+
+  trust: { backgroundColor: colors.surface, borderRadius: 12, padding: 16, gap: 14 },
   trustLine: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
   trustText: { flex: 1, fontFamily: fonts.body, color: colors.text, fontSize: 13, lineHeight: 19 },
   disclaimer: { fontFamily: fonts.body, color: colors.muted, fontSize: 11, textAlign: 'center' },
-  walletPill: { backgroundColor: 'rgba(15,25,35,0.28)', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 5 },
-
-  card: {
-    height: 150,
-    backgroundColor: colors.surface,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.line,
-    overflow: 'hidden',
-    padding: 14,
-    justifyContent: 'space-between',
-  },
-  cardWished: { borderColor: colors.red, borderWidth: 1.5 },
-  cardAccent: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 3 },
-  cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  tierIcon: { width: 20, height: 20 },
-  badges: { flexDirection: 'row', gap: 6 },
-  badge: { backgroundColor: colors.red, borderRadius: 4, paddingHorizontal: 7, paddingVertical: 2 },
-  badgeWish: { backgroundColor: colors.text },
-  badgeText: { fontFamily: fonts.bodyBold, color: colors.bg, fontSize: 11, letterSpacing: 0.5 },
-  skinImage: { position: 'absolute', top: 18, bottom: 44, left: 40, right: 20 },
-  cardBottom: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12 },
-  skinName: { flex: 1, fontFamily: fonts.display, color: colors.text, fontSize: 20, lineHeight: 22, letterSpacing: 0.5 },
-  priceCol: { alignItems: 'flex-end' },
-  strike: { fontFamily: fonts.body, color: colors.muted, fontSize: 12, textDecorationLine: 'line-through' },
-
-  bundle: {
-    aspectRatio: 16 / 10,
-    borderRadius: 8,
-    overflow: 'hidden',
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.line,
-    justifyContent: 'flex-end',
-  },
-  bundleInfo: { padding: 14, gap: 4 },
-  bundleTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  bundleName: { flex: 1, fontFamily: fonts.display, color: colors.white, fontSize: 26, letterSpacing: 1 },
-  bundleItems: { fontFamily: fonts.body, color: colors.muted, fontSize: 12, lineHeight: 17 },
 
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  accessory: {
-    width: '47.5%',
-    flexGrow: 1,
+  half: { flexBasis: '40%', flexGrow: 1 },
+  tile: { flexBasis: '40%', flexGrow: 1, backgroundColor: colors.surface, borderRadius: 12, overflow: 'hidden' },
+  tileArt: { height: 96, padding: 12 },
+  art: { width: '100%', height: '100%' },
+  wishMark: { position: 'absolute', top: 8, right: 8 },
+  tileInfo: { flex: 1, padding: 12, gap: 8, justifyContent: 'space-between' },
+  tileFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  tierIcon: { width: 16, height: 16 },
+  skinName: { fontFamily: fonts.bodyBold, color: colors.text, fontSize: 14, lineHeight: 18 },
+
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
     backgroundColor: colors.surface,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.line,
-    overflow: 'hidden',
+    borderRadius: 12,
+    padding: 8,
+    paddingRight: 12,
   },
-  accessoryArt: { height: 96, backgroundColor: colors.surfaceHigh, alignItems: 'center', justifyContent: 'center' },
+  rowArt: { width: 96, height: 56, borderRadius: 8, padding: 8 },
+  rowInfo: { flex: 1, gap: 4 },
+  rowNameLine: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  rowPrice: { alignItems: 'flex-end', gap: 4 },
+  strike: { fontFamily: fonts.body, color: colors.muted, fontSize: 12, textDecorationLine: 'line-through' },
+  badge: { backgroundColor: colors.red, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
+  badgeText: { fontFamily: fonts.bodyBold, color: colors.bg, fontSize: 11 },
+
+  bundle: { aspectRatio: 16 / 10, borderRadius: 12, overflow: 'hidden', backgroundColor: colors.surface, justifyContent: 'flex-end' },
+  bundleInfo: { padding: 14, gap: 4 },
+  bundleTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  bundleName: { flex: 1, fontFamily: fonts.display, color: colors.white, fontSize: 24, letterSpacing: 1 },
+  bundleItems: { fontFamily: fonts.body, color: colors.muted, fontSize: 12, lineHeight: 17 },
+
+  accessoryArt: { backgroundColor: colors.surfaceHigh, alignItems: 'center', justifyContent: 'center' },
   accessoryIcon: { width: 72, height: 72 },
-  titleText: { fontFamily: fonts.display, color: colors.text, fontSize: 18, letterSpacing: 1, textAlign: 'center', paddingHorizontal: 10 },
-  accessoryInfo: { padding: 10, gap: 4 },
-  accessoryKind: { fontFamily: fonts.displayMedium, color: colors.red, fontSize: 12, letterSpacing: 1.5 },
-  accessoryName: { fontFamily: fonts.bodyMedium, color: colors.text, fontSize: 13 },
+  titleText: { fontFamily: fonts.display, color: colors.text, fontSize: 18, letterSpacing: 1, textAlign: 'center' },
+  accessoryKind: { fontFamily: fonts.displayMedium, color: colors.muted, fontSize: 12, letterSpacing: 1.5 },
 });
