@@ -70,7 +70,7 @@ jobs:
         env:
           APP_VERSION: ${{ steps.version.outputs.app }}
         run: |
-          path="valorant-store-${APP_VERSION}.apk"
+          path="val-store-${APP_VERSION}.apk"
           mv android/app/build/outputs/apk/release/app-release.apk "$path"
           echo "path=$path" >> "$GITHUB_OUTPUT"
 

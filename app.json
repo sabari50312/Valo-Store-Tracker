@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Valorant Store",
-    "slug": "valorant-store",
+    "name": "Val Store",
+    "slug": "val-store",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -16,7 +16,7 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.sabari.valorantstore"
+      "package": "com.sabari.valstore"
     },
     "plugins": [
       "expo-image",
@@ -41,7 +41,7 @@
         }
       ]
     ],
-    "scheme": "valorantstore",
+    "scheme": "valstore",
     "platforms": [
       "android",
       "ios"
