@@ -34,6 +34,14 @@
       "expo-sqlite",
       "expo-background-task",
       [
+        "expo-build-properties",
+        {
+          "android": {
+            "extraProguardRules": "-keep class androidx.work.impl.WorkDatabase_Impl { <init>(); }"
+          }
+        }
+      ],
+      [
         "expo-notifications",
         {
           "icon": "./assets/android-icon-monochrome.png",
