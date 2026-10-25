@@ -2,6 +2,13 @@
 
 Check your VALORANT store from your phone, without opening your PC.
 
+<p>
+  <img src="docs/screenshots/store.png" width="24%" alt="Store tab with today's offers, wallet and reset countdown">
+  <img src="docs/screenshots/skin.png" width="24%" alt="Skin page with variants and upgrade levels">
+  <img src="docs/screenshots/video.png" width="24%" alt="Skin page playing an upgrade preview video">
+  <img src="docs/screenshots/wishlist.png" width="24%" alt="Wishlist tab with store alerts">
+</p>
+
 - **Daily store**, **night market**, **featured bundle** and the **accessory store**, with a countdown to the next reset
 - **Wallet**: your VP, Kingdom Credits and Radianite
 - **Skin previews**: tap any skin to see its variants and watch the in-game video for every upgrade level
