@@ -30,8 +30,8 @@ As with any unofficial app, use it at your own risk. Riot can change things on t
 
 ## Install
 
-1. Download the latest `val-store-x.y.z.apk` from [Releases](../../releases).
-2. Open it on your Android phone. If asked, allow your browser to install apps. Needs a 64-bit phone (any Android phone from roughly the last six years).
+1. On your Android phone, open the [latest release](https://github.com/sabari50312/Valo-Store-Tracker/releases/latest) and tap `val-store-x.y.z.apk` under **Assets** to download it.
+2. Open the downloaded file. If asked, allow your browser to install apps. Needs a 64-bit phone (any Android phone from roughly the last six years).
 3. Open Val Store and sign in with your Riot ID and password. Google and Apple sign-in aren't supported.
 
 New versions install over the old one and keep you signed in.
