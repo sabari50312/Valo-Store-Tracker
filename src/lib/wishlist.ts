@@ -1,9 +1,9 @@
 // Wishlisted skins, persisted on device. Each entry keeps its name so the
 // background check can write notifications without loading the catalog.
-import Storage from 'expo-sqlite/kv-store';
 import { useSyncExternalStore } from 'react';
 
 import type { Skin } from './catalog';
+import Storage from './kv';
 
 export type WishItem = { skinId: string; levelId: string; name: string; image: string | null };
 

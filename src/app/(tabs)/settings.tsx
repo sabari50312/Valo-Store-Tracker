@@ -1,21 +1,29 @@
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import { ReactNode } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button, Header } from '@/components/ui';
 import { useStore } from '@/lib/store-context';
 import { colors, fonts } from '@/lib/theme';
 
+const WEB = Platform.OS === 'web';
+
 export default function SettingsScreen() {
   const { riotId, openLogin, signOut } = useStore();
   const signedIn = riotId != null;
 
-  const confirmSignOut = () =>
+  const confirmSignOut = () => {
+    // react-native-web's Alert is a no-op, so the browser uses its own dialog.
+    if (WEB) {
+      if (window.confirm('Sign out? Your wishlist stays in this browser.')) signOut();
+      return;
+    }
     Alert.alert('Sign out?', 'Wishlist alerts pause until you sign in again. Your wishlist stays on this phone.', [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Sign out', style: 'destructive', onPress: () => signOut() },
     ]);
+  };
 
   return (
     <ScrollView style={styles.flex} contentContainerStyle={styles.scroll}>
@@ -32,7 +40,10 @@ export default function SettingsScreen() {
 
         <Card title="Privacy">
           <Line icon="lock-closed-outline" text="You sign in on Riot's own login page. Val Store never sees or stores your password." />
-          <Line icon="phone-portrait-outline" text="Your session, wishlist and settings stay on this phone. There are no Val Store servers, accounts or analytics." />
+          <Line
+            icon={WEB ? 'browsers-outline' : 'phone-portrait-outline'}
+            text={`Your session, wishlist and settings stay ${WEB ? 'in this browser' : 'on this phone'}. There are no Val Store servers, accounts or analytics.`}
+          />
           <Line icon="eye-off-outline" text="Val Store only reads your store and wallet. It never buys, spends or changes anything." />
           <Line icon="globe-outline" text="It talks to Riot for your store, and to valorant-api.com for skin names, images and videos." />
         </Card>

@@ -2,13 +2,16 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { AccessoryOffer, Bundle, Item, Store } from '@/lib/store';
 import { colors, fonts, KC_ICON, RAD_ICON, VP_ICON } from '@/lib/theme';
 import { useWishlist } from '@/lib/wishlist';
 
 import { Button, Caption, clock, Countdown, Header, Notice, Pill, Price, SectionHeader, short, Skeleton } from './ui';
+
+// Browsers have no pull-to-refresh inside the page, so the web gets a refresh button instead.
+const WEB = Platform.OS === 'web';
 
 export function StoreView({ store, refreshing, onRefresh }: { store: Store; refreshing: boolean; onRefresh: () => void }) {
   const deadline = (remaining: number) => store.fetchedAt + remaining * 1000;
@@ -23,14 +26,17 @@ export function StoreView({ store, refreshing, onRefresh }: { store: Store; refr
       }
     >
       <Header title="Store" right={store.wallet && <Wallet wallet={store.wallet} />}>
-        <Text style={styles.clock}>
-          <Countdown deadline={deadline(store.daily.remaining)} format={clock} />
-        </Text>
+        <View style={styles.clockRow}>
+          <Text style={styles.clock}>
+            <Countdown deadline={deadline(store.daily.remaining)} format={clock} />
+          </Text>
+          {WEB && <RefreshButton refreshing={refreshing} onPress={onRefresh} />}
+        </View>
         <Caption text="until your offers reset" />
       </Header>
 
       <View style={styles.body}>
-        {store.catalogMissing && <Notice text="Skin names and images couldn't load. Pull down to try again." />}
+        {store.catalogMissing && <Notice text={`Skin names and images couldn't load. ${WEB ? 'Tap refresh' : 'Pull down'} to try again.`} />}
         <SectionHeader title="Today's offers" />
         <View style={styles.grid}>
           {store.daily.items.map(it => (
@@ -99,13 +105,29 @@ export function SignedOutView({ onSignIn }: { onSignIn: () => void }) {
       <View style={styles.body}>
         <View style={styles.trust}>
           <TrustLine icon="lock-closed-outline" text="You sign in on Riot's own login page. Val Store never sees or stores your password." />
-          <TrustLine icon="phone-portrait-outline" text="Everything stays on your phone. There are no Val Store servers." />
+          <TrustLine
+            icon={WEB ? 'browsers-outline' : 'phone-portrait-outline'}
+            text={`Everything stays ${WEB ? 'in this browser' : 'on your phone'}. There are no Val Store servers.`}
+          />
           <TrustLine icon="eye-off-outline" text="Val Store only reads your store. It never buys, spends or changes anything on your account." />
         </View>
         <Button label="Sign in with Riot" onPress={onSignIn} />
         <Text style={styles.disclaimer}>{"Val Store isn't affiliated with or endorsed by Riot Games."}</Text>
       </View>
     </View>
+  );
+}
+
+function RefreshButton({ refreshing, onPress }: { refreshing: boolean; onPress: () => void }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={refreshing}
+      accessibilityLabel="Refresh"
+      style={({ pressed }) => [styles.refresh, pressed && { opacity: 0.8 }]}
+    >
+      {refreshing ? <ActivityIndicator size="small" color={colors.red} /> : <Ionicons name="refresh" size={20} color={colors.text} />}
+    </Pressable>
   );
 }
 
@@ -255,6 +277,16 @@ const styles = StyleSheet.create({
   gap: { gap: 12 },
   pressed: { opacity: 0.85, transform: [{ scale: 0.99 }] },
 
+  clockRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12 },
+  refresh: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 6,
+  },
   clock: {
     fontFamily: fonts.display,
     color: colors.red,

@@ -1,0 +1,54 @@
+name: Deploy website
+
+# Builds the web version and publishes it on GitHub Pages at
+# https://<owner>.github.io/<repo>/. Runs on every push to main, or from the
+# Actions tab > Deploy website > Run workflow.
+#
+# One-time setup: Settings > Pages > Source: GitHub Actions.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Don't let an older build overwrite a newer one.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build
+        env:
+          WEB_BASE_URL: /${{ github.event.repository.name }}
+        # Pages serves 404.html for unknown paths; a copy of the app lets
+        # links like /skin/<id> open the app, which then routes itself.
+        run: |
+          npx expo export --platform web
+          cp dist/index.html dist/404.html
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+
+      - id: deploy
+        uses: actions/deploy-pages@v5

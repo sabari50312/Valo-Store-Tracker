@@ -1,9 +1,10 @@
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react';
 
 import { markSeen, onSignedIn, onSignedOut } from './alerts';
+import { clearRiotSession, rememberLogin, silentAuth } from './auth';
 import { loadCatalog } from './catalog';
 import { AppError, toAppError } from './errors';
-import { clearRiotSession, openSession, silentAuth, Tokens } from './riot';
+import { openSession, Tokens } from './riot';
 import { loadStore, Store } from './store';
 
 export type StoreState =
@@ -78,6 +79,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const onLogin = useCallback(
     (tokens: Tokens) => {
+      rememberLogin(tokens);
       onSignedIn();
       load(tokens);
     },

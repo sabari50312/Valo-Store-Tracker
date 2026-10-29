@@ -2,13 +2,17 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { FlatList, Platform, Pressable, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 
 import { Button, Caption, Header, SectionHeader } from '@/components/ui';
 import { alertsEnabled, checkWishlist, disableAlerts, enableAlerts } from '@/lib/alerts';
 import { colors, fonts } from '@/lib/theme';
 import { useCatalog } from '@/lib/use-catalog';
 import { toggleWish, useWishlist, WishItem, wishFromSkin } from '@/lib/wishlist';
+
+// Alerts need a background task and notifications, which only the Android app has.
+const WEB = Platform.OS === 'web';
+const WEB_HINT = 'They show a red heart when they turn up in your store.';
 
 type Row = WishItem & { tierIcon: string | null; tierColor: string | null };
 
@@ -36,10 +40,10 @@ export default function WishlistScreen() {
   const header = (
     <View>
       <Header title="Wishlist">
-        <Caption text={`${wishlist.length} ${wishlist.length === 1 ? 'skin' : 'skins'} saved. Get pinged when one shows up in your store.`} />
+        <Caption text={`${wishlist.length} ${wishlist.length === 1 ? 'skin' : 'skins'} saved. ${WEB ? WEB_HINT : 'Get pinged when one shows up in your store.'}`} />
       </Header>
       <View style={styles.body}>
-        <AlertsCard />
+        {!WEB && <AlertsCard />}
         <View style={styles.search}>
           <Ionicons name="search" size={18} color={colors.muted} />
           <TextInput

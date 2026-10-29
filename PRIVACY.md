@@ -1,14 +1,14 @@
 # Privacy Policy
 
-**Val Store** · Last updated 24 October 2026
+**Val Store** · Last updated 29 October 2026
 
-Val Store is a free, fan-made Android app for checking your VALORANT store. It isn't affiliated with or endorsed by Riot Games.
+Val Store is a free, fan-made Android app and website for checking your VALORANT store. It isn't affiliated with or endorsed by Riot Games.
 
 ## The short version
 
 - Val Store doesn't collect, sell or share any personal data.
 - There are no Val Store servers, accounts, analytics, ads or crash trackers.
-- Everything the app keeps stays on your phone.
+- Everything the app keeps stays on your phone, or in your browser for the website.
 
 ## Signing in
 
@@ -35,6 +35,14 @@ Uninstalling the app deletes all of it. Signing out deletes the session and aler
 | Riot's content servers | Playing skin preview videos |
 
 These services have their own privacy policies; for example, [Riot's privacy notice](https://www.riotgames.com/en/privacy-notice).
+
+## The website
+
+The website works like the app, with these differences:
+
+- **Signing in:** you log in on Riot's own site in a separate tab, then bring back the link Riot sends you to. That link holds a login token that expires after about an hour. Val Store reads it from your clipboard only when you tap **Use copied link**, then clears the clipboard so the token doesn't stay there.
+- **Storage:** the token, wishlist and settings are kept in your browser's local storage for this site. The token is deleted when it expires or when you sign out. Clearing the site's data in your browser deletes everything.
+- **No alerts:** the website doesn't run background checks or send notifications.
 
 ## Notifications and background checks
 

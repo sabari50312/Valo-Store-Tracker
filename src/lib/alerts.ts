@@ -3,10 +3,11 @@
 import { isRunningInExpoGo } from 'expo';
 import * as BackgroundTask from 'expo-background-task';
 import * as Notifications from 'expo-notifications';
-import Storage from 'expo-sqlite/kv-store';
 import * as TaskManager from 'expo-task-manager';
 
-import { fetchStorefront, openSession, silentAuth } from './riot';
+import { silentAuth } from './auth';
+import Storage from './kv';
+import { fetchStorefront, openSession } from './riot';
 import { offeredLevelIds } from './store';
 import { getWishlist, WishItem } from './wishlist';
 

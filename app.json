@@ -52,7 +52,15 @@
     "scheme": "valstore",
     "platforms": [
       "android",
-      "ios"
-    ]
+      "ios",
+      "web"
+    ],
+    "web": {
+      "output": "single",
+      "favicon": "./assets/icon.png",
+      "themeColor": "#0F1923",
+      "backgroundColor": "#0F1923",
+      "description": "Check your VALORANT daily store, night market and wallet."
+    }
   }
 }

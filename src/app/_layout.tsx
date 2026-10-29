@@ -4,7 +4,7 @@ import { ErrorBoundaryProps, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { RiotLogin } from '@/components/RiotLogin';
@@ -34,8 +34,10 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <StoreProvider>
         <StatusBar style="light" />
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }} />
-        <LoginOverlay />
+        <View style={styles.frame}>
+          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }} />
+          <LoginOverlay />
+        </View>
       </StoreProvider>
     </SafeAreaProvider>
   );
@@ -58,3 +60,8 @@ export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
     </SafeAreaProvider>
   );
 }
+
+// In a desktop browser, keep the phone layout as a centred column instead of stretching it.
+const styles = StyleSheet.create({
+  frame: Platform.OS === 'web' ? { flex: 1, width: '100%', maxWidth: 560, alignSelf: 'center' } : { flex: 1 },
+});

@@ -1,6 +1,6 @@
 // Riot client API calls. Endpoint reference: https://valapidocs.techchrism.me/
 import { fetch as expoFetch } from 'expo/fetch';
-import { TurboModule, TurboModuleRegistry } from 'react-native';
+import { Platform } from 'react-native';
 
 import { AppError, httpError, toAppError } from './errors';
 
@@ -39,31 +39,11 @@ export function parseTokens(url: string): Tokens | null {
   return { accessToken: params.access_token, idToken: params.id_token };
 }
 
-/**
- * Cookie reauth without a WebView. On Android, expo/fetch with
- * credentials: 'include' uses the same cookie store as the login WebView,
- * so Riot sees the session cookie and answers with a redirect carrying fresh
- * tokens. Returns null when the session has expired (redirect goes to login).
- * Works in background tasks too.
- */
-export async function silentAuth(): Promise<Tokens | null> {
-  const r = await request(AUTH_URL, { credentials: 'include', redirect: 'manual' });
-  if (r.status >= 500) throw httpError(r.status, 'auth.riotgames.com');
-  return parseTokens(r.headers.get('location') ?? '');
-}
-
-/** Signs out: clears Riot's cookies, which the login WebView shares. */
-export function clearRiotSession(): Promise<void> {
-  type Networking = TurboModule & { clearCookies(cb: (cleared: boolean) => void): void };
-  const net = TurboModuleRegistry.get<Networking>('Networking');
-  return new Promise(resolve => (net ? net.clearCookies(() => resolve()) : resolve()));
-}
-
 type Init = Parameters<typeof expoFetch>[1];
 const TIMEOUT_MS = 20_000;
 
 /** fetch with a timeout, and transport failures mapped to AppError. */
-async function request(url: string, init?: Init) {
+export async function request(url: string, init?: Init) {
   const controller = new AbortController();
   let timedOut = false;
   const timer = setTimeout(() => {
@@ -73,10 +53,29 @@ async function request(url: string, init?: Init) {
   try {
     return await expoFetch(url, { ...init, signal: controller.signal });
   } catch (e) {
-    throw timedOut ? new AppError('timeout', url.split('/')[2]) : toAppError(e);
+    if (timedOut) throw new AppError('timeout', url.split('/')[2]);
+    throw Platform.OS === 'web' && e instanceof TypeError ? await browserFetchError(url, e) : toAppError(e);
   } finally {
     clearTimeout(timer);
   }
+}
+
+/**
+ * In a browser, fetch() rejects with a bare TypeError both when the network is
+ * down and when a response lacks CORS headers. Riot's auth servers send their
+ * 401s without them, so an expired token looks like a network failure. A
+ * no-cors request to the same host tells the two apart.
+ */
+async function browserFetchError(url: string, e: TypeError): Promise<AppError> {
+  const host = url.split('/')[2];
+  // Same URL rather than the host root: entitlements' root redirects to plain http, which browsers block.
+  const reachable = await fetch(url, { mode: 'no-cors' }).then(
+    () => true,
+    () => false,
+  );
+  return reachable && host.endsWith('.riotgames.com')
+    ? new AppError('session', `${host} rejected the login`)
+    : new AppError('offline', e.message);
 }
 
 export async function json<T = any>(url: string, init?: Init): Promise<T> {
@@ -97,14 +96,24 @@ export type Session = {
   headers: Record<string, string>;
 };
 
+/** A JWT's payload. Riot's tokens are JWTs; the id_token carries the account id (sub) and Riot ID (acct). */
+export function jwtClaims(jwt: string): any {
+  const b64 = jwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+  const bytes = atob(b64 + '='.repeat(-b64.length & 3));
+  // atob gives one char per byte; percent-decoding turns the UTF-8 back into text (Riot IDs can be non-ASCII).
+  return JSON.parse(decodeURIComponent(Array.from(bytes, c => '%' + c.charCodeAt(0).toString(16).padStart(2, '0')).join('')));
+}
+
 /** Exchanges tokens for everything the pd.* endpoints need. */
 export async function openSession(t: Tokens): Promise<Session> {
   const bearer = { Authorization: `Bearer ${t.accessToken}` };
   const jsonPost = { ...bearer, 'Content-Type': 'application/json' };
 
-  const [ent, user, geo, version] = await Promise.all([
+  // The id_token already names the account, so there's no call to /userinfo
+  // (whose replies browsers block: it sends no CORS header).
+  const user = jwtClaims(t.idToken);
+  const [ent, geo, version] = await Promise.all([
     json('https://entitlements.auth.riotgames.com/api/token/v1', { method: 'POST', headers: jsonPost, body: '{}' }),
-    json('https://auth.riotgames.com/userinfo', { headers: bearer }),
     json('https://riot-geo.pas.si.riotgames.com/pas/v1/product/valorant', {
       method: 'PUT',
       headers: jsonPost,

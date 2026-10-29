@@ -1,9 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
+import { Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors, fonts } from '@/lib/theme';
 
 export default function TabLayout() {
+  const insets = useSafeAreaInsets();
+  // In browsers the icon glyphs render taller, and the default 49px bar clips the labels.
+  const webHeight = Platform.OS === 'web' ? { height: 56 + insets.bottom } : null;
   return (
     <Tabs
       screenOptions={{
@@ -11,7 +16,7 @@ export default function TabLayout() {
         sceneStyle: { backgroundColor: colors.bg },
         tabBarActiveTintColor: colors.red,
         tabBarInactiveTintColor: colors.muted,
-        tabBarStyle: { backgroundColor: colors.bg, borderTopColor: colors.line },
+        tabBarStyle: { backgroundColor: colors.bg, borderTopColor: colors.line, ...webHeight },
         tabBarLabelStyle: { fontFamily: fonts.bodyMedium, fontSize: 11 },
       }}
     >

@@ -21,9 +21,12 @@ export default function SkinScreen() {
   if (!catalog) return <ActivityIndicator style={styles.flex} color={colors.red} />;
 
   const skin = catalog.byId.get(id);
-  if (!skin) return <ErrorView error={new AppError('changed', `unknown skin ${id}`)} onRetry={() => router.back()} />;
+  if (!skin) return <ErrorView error={new AppError('changed', `unknown skin ${id}`)} onRetry={goBack} />;
   return <SkinDetail skin={skin} />;
 }
+
+// A reloaded browser tab opens straight on this page, with nothing to go back to.
+const goBack = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
 // "KillBanner" -> "Kill Banner"
 const spaced = (s: string) => s.replace(/([a-z])([A-Z])/g, '$1 $2');
@@ -57,7 +60,7 @@ function SkinDetail({ skin }: { skin: Skin }) {
     <ScrollView style={styles.flex} contentContainerStyle={styles.scroll}>
       <View style={[styles.top, { paddingTop: insets.top + 8 }]}>
         <View style={styles.topBar}>
-          <IconButton name="chevron-back" onPress={() => router.back()} />
+          <IconButton name="chevron-back" onPress={goBack} />
           <IconButton
             name={wished ? 'heart' : 'heart-outline'}
             color={wished ? colors.red : colors.text}

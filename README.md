@@ -1,6 +1,6 @@
 # Val Store
 
-Check your VALORANT store from your phone, without opening your PC.
+Check your VALORANT store from your phone, without opening your PC. Use the Android app, or the [website](https://sabari50312.github.io/Valo-Store-Tracker/) on any phone or computer.
 
 <p>
   <img src="docs/screenshots/store.png" width="24%" alt="Store tab with today's offers, wallet and reset countdown">
@@ -19,7 +19,7 @@ Check your VALORANT store from your phone, without opening your PC.
 ## Is it safe?
 
 - **Your password never touches Val Store.** You sign in on Riot's own login page. The app doesn't see, read or store your username or password.
-- **No servers, no tracking.** There's no Val Store backend, account, analytics or ads. Your session and wishlist stay on your phone.
+- **No servers, no tracking.** There's no Val Store backend, account, analytics or ads. Your session and wishlist stay on your phone, or in your browser on the website.
 - **Read-only.** Val Store only looks at your store and wallet. It never buys, spends or changes anything on your account.
 - **Sign out any time** in Settings, which removes your session from the phone.
 - **Open source.** All of the app's code is in this repository, so anyone can check these claims.
@@ -35,6 +35,19 @@ As with any unofficial app, use it at your own risk. Riot can change things on t
 3. Open Val Store and sign in with your Riot ID and password. Google and Apple sign-in aren't supported.
 
 New versions install over the old one and keep you signed in.
+
+## Use it in a browser
+
+Open **[sabari50312.github.io/Valo-Store-Tracker](https://sabari50312.github.io/Valo-Store-Tracker/)** on any phone, tablet or computer, including iPhone. Nothing to install.
+
+Browsers don't let one site read another site's page, so signing in takes one extra step:
+
+1. Tap **Sign in with Riot**, then **Open Riot login**. Riot's login opens in a new tab.
+2. Log in. You'll land on a playvalorant.com page that says it can't be found. That's expected.
+3. Copy that page's link: **Share → Copy** on a phone, or copy it from the address bar.
+4. Go back to the Val Store tab and tap **Use copied link**.
+
+Riot's login lasts about an hour on the website, so you'll repeat this when it runs out. Riot usually remembers you, so it's quick. Wishlist alerts need the Android app.
 
 ## Wishlist alerts
 
@@ -52,6 +65,12 @@ npx expo start --tunnel ngrok
 ```
 
 Scan the QR code with Expo Go. Background alerts are best tested in a release build.
+
+Press `w` in the dev server, or run `npx expo start --web`, to open the web version. Web-only code lives in `*.web.ts(x)` files next to their native versions (`RiotLogin`, `auth`, `alerts`, `kv`).
+
+### Website
+
+`.github/workflows/web.yml` builds the web version and publishes it to GitHub Pages on every push to `main`. One-time setup: **Settings → Pages → Source: GitHub Actions**.
 
 ### Releases
 
