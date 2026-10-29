@@ -1,44 +1,41 @@
+<div align="center">
+
+<img src="docs/icon.png" width="96" alt="Val Store icon">
+
 # Val Store
 
-Check your VALORANT store from your phone, without opening your PC. Use the Android app, or the [website](https://sabari50312.github.io/Valo-Store-Tracker/) on any phone or computer.
+Check your VALORANT store from your phone, without opening your PC.
 
-<p>
-  <img src="docs/screenshots/store.png" width="24%" alt="Store tab with today's offers, wallet and reset countdown">
-  <img src="docs/screenshots/skin.png" width="24%" alt="Skin page with variants and upgrade levels">
-  <img src="docs/screenshots/video.png" width="24%" alt="Skin page playing an upgrade preview video">
-  <img src="docs/screenshots/wishlist.png" width="24%" alt="Wishlist tab with store alerts">
-</p>
+<a href="https://sabari50312.github.io/Valo-Store-Tracker/"><img src="https://img.shields.io/badge/Open_the_website-FF4655?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Open the website" height="36"></a>
+&nbsp;
+<a href="https://github.com/sabari50312/Valo-Store-Tracker/releases/latest"><img src="https://img.shields.io/badge/Download_for_Android-1F2A36?style=for-the-badge&logo=android&logoColor=3DDC84" alt="Download for Android" height="36"></a>
+
+**Website:** any phone or computer, iPhone included. Nothing to install.<br>
+**Android app:** stays signed in and sends wishlist alerts.
+
+<br>
+
+<img src="docs/screenshots/store.png" width="23%" alt="Store tab with today's offers, wallet and reset countdown">&nbsp;
+<img src="docs/screenshots/skin.png" width="23%" alt="Skin page with variants and upgrade levels">&nbsp;
+<img src="docs/screenshots/video.png" width="23%" alt="Skin page playing an upgrade preview video">&nbsp;
+<img src="docs/screenshots/wishlist.png" width="23%" alt="Wishlist tab with store alerts">
+
+[Use the website](#use-the-website) · [Install the Android app](#install-the-android-app) · [Is it safe?](#is-it-safe) · [Wishlist alerts](#wishlist-alerts) · [Development](#development)
+
+</div>
+
+## Features
 
 - **Daily store**, **night market**, **featured bundle** and the **accessory store**, with a countdown to the next reset
 - **Wallet**: your VP, Kingdom Credits and Radianite
 - **Skin previews**: tap any skin to see its variants and watch the in-game video for every upgrade level
-- **Wishlist alerts**: pick the skins you want and get a notification when one shows up in your store
+- **Wishlist alerts** (Android app): pick the skins you want and get a notification when one shows up in your store
 
 > Val Store is a fan-made app. It isn't affiliated with or endorsed by Riot Games. VALORANT and Riot Games are trademarks of Riot Games, Inc.
 
-## Is it safe?
+## Use the website
 
-- **Your password never touches Val Store.** You sign in on Riot's own login page. The app doesn't see, read or store your username or password.
-- **No servers, no tracking.** There's no Val Store backend, account, analytics or ads. Your session and wishlist stay on your phone, or in your browser on the website.
-- **Read-only.** Val Store only looks at your store and wallet. It never buys, spends or changes anything on your account.
-- **Sign out any time** in Settings, which removes your session from the phone.
-- **Open source.** All of the app's code is in this repository, so anyone can check these claims.
-
-Read the full [privacy policy](PRIVACY.md).
-
-As with any unofficial app, use it at your own risk. Riot can change things on their side at any time, which may stop the app working until it's updated.
-
-## Install
-
-1. On your Android phone, open the [latest release](https://github.com/sabari50312/Valo-Store-Tracker/releases/latest) and tap `val-store-x.y.z.apk` under **Assets** to download it.
-2. Open the downloaded file. If asked, allow your browser to install apps. Needs a 64-bit phone (any Android phone from roughly the last six years).
-3. Open Val Store and sign in with your Riot ID and password. Google and Apple sign-in aren't supported.
-
-New versions install over the old one and keep you signed in.
-
-## Use it in a browser
-
-Open **[sabari50312.github.io/Valo-Store-Tracker](https://sabari50312.github.io/Valo-Store-Tracker/)** on any phone, tablet or computer, including iPhone. Nothing to install.
+Open **[sabari50312.github.io/Valo-Store-Tracker](https://sabari50312.github.io/Valo-Store-Tracker/)** in any browser.
 
 Browsers don't let one site read another site's page, so signing in takes one extra step:
 
@@ -47,11 +44,31 @@ Browsers don't let one site read another site's page, so signing in takes one ex
 3. Copy that page's link: **Share → Copy** on a phone, or copy it from the address bar.
 4. Go back to the Val Store tab and tap **Use copied link**.
 
-Riot's login lasts about an hour on the website, so you'll repeat this when it runs out. Riot usually remembers you, so it's quick. Wishlist alerts need the Android app.
+Riot's login lasts about an hour on the website, so you'll repeat this when it runs out. Riot usually remembers you, so it's quick.
+
+## Install the Android app
+
+1. On your Android phone, open the [latest release](https://github.com/sabari50312/Valo-Store-Tracker/releases/latest) and tap `val-store-x.y.z.apk` under **Assets** to download it.
+2. Open the downloaded file. If asked, allow your browser to install apps. Needs a 64-bit phone (any Android phone from roughly the last six years).
+3. Open Val Store and sign in with your Riot ID and password. Google and Apple sign-in aren't supported.
+
+New versions install over the old one and keep you signed in.
+
+## Is it safe?
+
+- **Your password never touches Val Store.** You sign in on Riot's own login page. Val Store doesn't see, read or store your username or password.
+- **No servers, no tracking.** There's no Val Store backend, account, analytics or ads. Your session and wishlist stay on your phone, or in your browser on the website.
+- **Read-only.** Val Store only looks at your store and wallet. It never buys, spends or changes anything on your account.
+- **Sign out any time** in Settings, which removes your session from your phone or browser.
+- **Open source.** All of Val Store's code is in this repository, so anyone can check these claims.
+
+Read the full [privacy policy](PRIVACY.md).
+
+As with any unofficial app, use it at your own risk. Riot can change things on their side at any time, which may stop Val Store working until it's updated.
 
 ## Wishlist alerts
 
-In the **Wishlist** tab, search for skins and tap the heart. Then turn on **Store alerts**. Val Store checks once each time your store resets and notifies you if anything on your wishlist is in it.
+Android app only. In the **Wishlist** tab, search for skins and tap the heart. Then turn on **Store alerts**. Val Store checks once each time your store resets and notifies you if anything on your wishlist is in it.
 
 Alerts usually arrive within about 30 minutes of the reset. Android decides the exact timing, and battery saver can delay it. If alerts don't arrive, set Val Store's battery usage to **Unrestricted** in Android settings.
 
